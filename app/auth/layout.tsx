@@ -1,5 +1,6 @@
 "use client";
 
+import AuthGuard from "@/providers/Middleware";
 import React from "react";
 
 interface DashboardLayoutProps {
@@ -7,7 +8,11 @@ interface DashboardLayoutProps {
 }
 
 const AuthLayout = ({ children }: DashboardLayoutProps) => {
-  return <div>{children}</div>;
+  return (
+    <AuthGuard requireAuth={false}>
+      <div>{children}</div>
+    </AuthGuard>
+  );
 };
 
 export default AuthLayout;

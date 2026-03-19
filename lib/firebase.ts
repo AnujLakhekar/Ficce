@@ -1,6 +1,17 @@
 import { getApp, getApps, initializeApp, type FirebaseApp } from "firebase/app";
-import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
-import { doc, getFirestore, serverTimestamp, setDoc } from "firebase/firestore";
+import {
+  createUserWithEmailAndPassword,
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
+import {
+  doc,
+  getDoc,
+  getFirestore,
+  serverTimestamp,
+  setDoc,
+} from "firebase/firestore";
 import { collection, addDoc } from "firebase/firestore";
 
 let cachedApp: FirebaseApp | null = null;
@@ -75,6 +86,51 @@ export async function _CreateUserWithEmailAndPassword(
     return userCredential.user;
   } catch (error) {
     console.error("Error signing up:", error);
+    throw error;
+  }
+}
+
+export async function _SignInWithGoogle() {
+  try {
+    const provider = new GoogleAuthProvider();
+    const userCredential = await signInWithPopup(auth, provider);
+    const user = userCredential.user;
+
+    const db = getFirestore(getFirebaseApp());
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
+        email: user.email,
+        name: user.displayName ?? "Google User",
+        role: "user",
+        provider: "google",
+        createdAt: serverTimestamp(),
+      });
+    }
+
+    return user;
+  } catch (error) {
+    console.error("Error signing in with Google:", error);
+    throw error;
+  }
+}
+
+export async function getUserByUid(uid: string) {
+  try {
+    const db = getFirestore(getFirebaseApp());
+
+    const userRef = doc(db, "users", uid);
+    const userSnap = await getDoc(userRef);
+
+    if (userSnap.exists()) {
+      return userSnap.data();
+    } else {
+      throw new Error("User not found");
+    }
+  } catch (error) {
+    console.error("Error fetching user:", error);
     throw error;
   }
 }

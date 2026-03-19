@@ -3,7 +3,9 @@
 import React from "react";
 import { Apple, ArrowRight, Check, Chrome, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
-import { _CreateUserWithEmailAndPassword } from "@/lib/firebase";
+import { _CreateUserWithEmailAndPassword, _SignInWithGoogle, auth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { useRouter } from "next/navigation";
 
 const heroSlides = [
   "Capturing Moments, Creating Memories",
@@ -21,14 +23,26 @@ const Page = () => {
   const [showPassword, setShowPassword] = React.useState(false);
   const [activeSlide, setActiveSlide] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(false);
+  const router = useRouter();
 
   React.useEffect(() => {
     const timer = setInterval(() => {
       setActiveSlide((prev) => (prev + 1) % heroSlides.length);
     }, 3500);
 
+    
+
     return () => clearInterval(timer);
   }, []);
+
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        router.push("/dashboard");
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -50,6 +64,8 @@ const Page = () => {
       toast.error("First name is required");
       return;
     }
+
+    setIsLoading(true);
 
     const loadingToast = toast.loading(
       mode === "register" ? "Creating your account..." : "Logging you in...",
@@ -91,6 +107,27 @@ const Page = () => {
       .finally(() => {
         setIsLoading(false);
       });
+  };
+
+  const handleGoogleAuth = async () => {
+    const loadingToast = toast.loading("Signing in with Google...");
+
+    try {
+      await _SignInWithGoogle();
+      toast.dismiss(loadingToast);
+      toast.success("Signed in with Google successfully.");
+      router.push("/dashboard");
+    } catch (error: any) {
+      toast.dismiss(loadingToast);
+
+      if (error?.code === "auth/popup-closed-by-user") {
+        toast.error("Google sign-in was cancelled.");
+        return;
+      }
+
+      toast.error("Google sign-in failed. Please try again.");
+      console.error("Google auth error:", error);
+    }
   };
 
   return (
@@ -243,13 +280,22 @@ const Page = () => {
             </div>
 
             <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <button className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-outline bg-forground text-text transition hover:bg-secondary">
+              <button
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-outline bg-forground text-text transition hover:bg-secondary"
+                onClick={handleGoogleAuth}
+                type="button"
+              >
                 <Chrome size={18} />
                 Google
               </button>
-              <button className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-outline bg-forground text-text transition hover:bg-secondary">
+
+              <button
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-outline bg-secondary text-text-secondary cursor-not-allowed"
+                disabled
+                type="button"
+              >
                 <Apple size={18} />
-                Apple
+                Apple (Soon)
               </button>
             </div>
           </div>
