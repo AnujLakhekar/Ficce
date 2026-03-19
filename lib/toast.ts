@@ -82,32 +82,13 @@ export const showConfirm = (
   onConfirm: () => void,
   onCancel?: () => void,
 ) => {
-  toast(
-    (t) => (
-      <div className="flex flex-col gap-3">
-        <p className="text-sm">{message}</p>
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              onConfirm();
-              toast.dismiss(t.id);
-            }}
-            className="rounded bg-green-500 px-3 py-1 text-sm text-white hover:bg-green-600"
-          >
-            Confirm
-          </button>
-          <button
-            onClick={() => {
-              onCancel?.();
-              toast.dismiss(t.id);
-            }}
-            className="rounded bg-gray-500 px-3 py-1 text-sm text-white hover:bg-gray-600"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    ),
-    { duration: Infinity },
-  );
+  const confirmed = window.confirm(message);
+  if (confirmed) {
+    onConfirm();
+    toast.success("Action confirmed");
+    return;
+  }
+
+  onCancel?.();
+  toast("Action cancelled", { icon: "ℹ️" });
 };
