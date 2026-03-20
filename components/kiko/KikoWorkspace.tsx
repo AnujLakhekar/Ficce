@@ -8,7 +8,11 @@ import {
   ConversationContent,
   ConversationScrollButton,
 } from "@/components/ai/conversation";
-import { Message, MessageContent, MessageResponse } from "@/components/ai/message";
+import {
+  Message,
+  MessageContent,
+  MessageResponse,
+} from "@/components/ai/message";
 import {
   PromptInput,
   PromptInputActionAddAttachments,
@@ -32,6 +36,7 @@ type ChatMessage = {
   id: string;
   role: "user" | "assistant";
   content: string;
+  action: "none" | "thinking" | "streaming";
 };
 
 type KikoWorkspaceProps = {
@@ -45,7 +50,9 @@ const QUICK_PROMPTS = [
   "Find spending anomalies",
 ];
 
-export default function KikoWorkspace({ initialMode = "chat" }: KikoWorkspaceProps) {
+export default function KikoWorkspace({
+  initialMode = "chat",
+}: KikoWorkspaceProps) {
   const [mode, setMode] = React.useState<Mode>(initialMode);
   const [status, setStatus] = React.useState<"ready" | "streaming">("ready");
   const [messages, setMessages] = React.useState<ChatMessage[]>([
@@ -56,6 +63,7 @@ export default function KikoWorkspace({ initialMode = "chat" }: KikoWorkspacePro
         initialMode === "agent"
           ? "Agent mode enabled. Share a task and I will return an action plan with steps."
           : "Chat mode enabled. Ask anything and attach media/files if needed.",
+      action: "none",
     },
   ]);
 
@@ -77,6 +85,7 @@ export default function KikoWorkspace({ initialMode = "chat" }: KikoWorkspacePro
         id: nanoid(),
         role: "user",
         content: `${trimmed}${attachmentSummary}`,
+        action: "none",
       };
 
       const assistantId = nanoid();
@@ -84,7 +93,7 @@ export default function KikoWorkspace({ initialMode = "chat" }: KikoWorkspacePro
       setMessages((prev) => [
         ...prev,
         userMessage,
-        { id: assistantId, role: "assistant", content: "" },
+        { id: assistantId, role: "assistant", content: "", action: "none" },
       ]);
 
       setStatus("streaming");
@@ -108,7 +117,9 @@ export default function KikoWorkspace({ initialMode = "chat" }: KikoWorkspacePro
         current += `${token} `;
         setMessages((prev) =>
           prev.map((message) =>
-            message.id === assistantId ? { ...message, content: current.trim() } : message,
+            message.id === assistantId
+              ? { ...message, content: current.trim() }
+              : message,
           ),
         );
         await new Promise((resolve) => setTimeout(resolve, 20));
@@ -145,7 +156,9 @@ export default function KikoWorkspace({ initialMode = "chat" }: KikoWorkspacePro
           </button>
           <button
             className={`inline-flex items-center gap-1 rounded-lg px-3 py-2 text-xs font-medium sm:text-sm ${
-              mode === "agent" ? "bg-forground text-text" : "text-text-secondary"
+              mode === "agent"
+                ? "bg-forground text-text"
+                : "text-text-secondary"
             }`}
             onClick={() => setMode("agent")}
             type="button"
@@ -160,7 +173,7 @@ export default function KikoWorkspace({ initialMode = "chat" }: KikoWorkspacePro
           <span className="inline-flex items-center gap-1 font-medium text-text">
             <SparklesIcon className="size-4" /> Agent mode:
           </span>
-          optimized for task plans, step-by-step execution, and actionables.
+
         </div>
       )}
 
@@ -176,7 +189,11 @@ export default function KikoWorkspace({ initialMode = "chat" }: KikoWorkspacePro
 
           <Suggestions className="mt-2">
             {QUICK_PROMPTS.map((prompt) => (
-              <Suggestion key={prompt} onClick={handleQuickPrompt} suggestion={prompt} />
+              <Suggestion
+                key={prompt}
+                onClick={handleQuickPrompt}
+                suggestion={prompt}
+              />
             ))}
           </Suggestions>
         </ConversationContent>
@@ -184,10 +201,16 @@ export default function KikoWorkspace({ initialMode = "chat" }: KikoWorkspacePro
       </Conversation>
 
       <div className="border-t border-outline p-3 sm:p-4">
-        <PromptInput accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt" multiple onSubmit={handleSend}>
+        <PromptInput
+          accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
+          multiple
+          onSubmit={handleSend}
+        >
           <PromptInputBody>
             <PromptInputAttachments>
-              {(attachment) => <PromptInputAttachment data={attachment} key={attachment.id} />}
+              {(attachment) => (
+                <PromptInputAttachment data={attachment} key={attachment.id} />
+              )}
             </PromptInputAttachments>
             <PromptInputTextarea
               placeholder={

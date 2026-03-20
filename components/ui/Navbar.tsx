@@ -28,7 +28,6 @@ interface NavbarProps {
   isSidebarCollapsed: boolean;
   onToggleSidebar: () => void;
   bellColor?: string;
-
 }
 
 type SearchItem = {
@@ -41,25 +40,60 @@ type SearchItem = {
 };
 
 const SEARCH_ITEMS: SearchItem[] = [
-  { label: "Dashboard Home", href: "/dashboard", type: "page", keywords: ["home"] },
-  { label: "Tasks", href: "/dashboard/tasks", type: "page", keywords: ["todo", "work"] },
+  {
+    label: "Dashboard Home",
+    href: "/dashboard",
+    type: "page",
+    keywords: ["home"],
+  },
+  {
+    label: "Tasks",
+    href: "/dashboard/tasks",
+    type: "page",
+    keywords: ["todo", "work"],
+  },
   {
     label: "Transactions",
     href: "/dashboard/transactions",
     type: "page",
     keywords: ["income", "expense"],
   },
-  { label: "Payments", href: "/dashboard/payments", type: "page", keywords: ["pay"] },
-  { label: "Cards", href: "/dashboard/cards", type: "page", keywords: ["credit", "debit"] },
-  { label: "Capital", href: "/dashboard/capital", type: "page", keywords: ["fund", "cash"] },
-  { label: "Accounts", href: "/dashboard/accounts", type: "page", keywords: ["bank"] },
+  {
+    label: "Payments",
+    href: "/dashboard/payments",
+    type: "page",
+    keywords: ["pay"],
+  },
+  {
+    label: "Cards",
+    href: "/dashboard/cards",
+    type: "page",
+    keywords: ["credit", "debit"],
+  },
+  {
+    label: "Capital",
+    href: "/dashboard/capital",
+    type: "page",
+    keywords: ["fund", "cash"],
+  },
+  {
+    label: "Accounts",
+    href: "/dashboard/accounts",
+    type: "page",
+    keywords: ["bank"],
+  },
   {
     label: "Bill Pay",
     href: "/dashboard/bill-pay",
     type: "page",
     keywords: ["bills", "utilities"],
   },
-  { label: "Catalog", href: "/dashboard/catalog", type: "page", keywords: ["items", "products"] },
+  {
+    label: "Catalog",
+    href: "/dashboard/catalog",
+    type: "page",
+    keywords: ["items", "products"],
+  },
   {
     label: "Invoicing",
     href: "/dashboard/customers",
@@ -84,7 +118,12 @@ const SEARCH_ITEMS: SearchItem[] = [
     type: "page",
     keywords: ["alerts"],
   },
-  { label: "Profile", href: "/dashboard/profile", type: "page", keywords: ["user", "account"] },
+  {
+    label: "Profile",
+    href: "/dashboard/profile",
+    type: "page",
+    keywords: ["user", "account"],
+  },
   {
     label: "Settings",
     href: "/dashboard/settings",
@@ -97,10 +136,19 @@ const SEARCH_ITEMS: SearchItem[] = [
     type: "page",
     keywords: ["ai", "assistant", "chat"],
   },
-  { label: "KIKO Agent", href: "/dashboard/kiko/agent", type: "page", keywords: ["ai", "agent"] },
+  {
+    label: "KIKO Agent",
+    href: "/dashboard/kiko/agent",
+    type: "page",
+    keywords: ["ai", "agent"],
+  },
 ];
 
-const DATA_COLLECTIONS: Array<{ collection: string; source: string; href: string }> = [
+const DATA_COLLECTIONS: Array<{
+  collection: string;
+  source: string;
+  href: string;
+}> = [
   { collection: "tasks", source: "Tasks", href: "/dashboard/tasks" },
   { collection: "payments", source: "Payments", href: "/dashboard/payments" },
   { collection: "cards", source: "Cards", href: "/dashboard/cards" },
@@ -109,7 +157,11 @@ const DATA_COLLECTIONS: Array<{ collection: string; source: string; href: string
   { collection: "bill-pay", source: "Bill Pay", href: "/dashboard/bill-pay" },
   { collection: "catalog", source: "Catalog", href: "/dashboard/catalog" },
   { collection: "invoices", source: "Invoicing", href: "/dashboard/customers" },
-  { collection: "reimbursements", source: "Reimbursements", href: "/dashboard/reimbursements" },
+  {
+    collection: "reimbursements",
+    source: "Reimbursements",
+    href: "/dashboard/reimbursements",
+  },
 ];
 
 const formatMoney = (value: number) => {
@@ -120,17 +172,25 @@ const formatMoney = (value: number) => {
   }).format(value);
 };
 
-const Navbar = ({ isSidebarCollapsed, onToggleSidebar, bellColor = "red" }: NavbarProps) => {
+const Navbar = ({
+  isSidebarCollapsed,
+  onToggleSidebar,
+  bellColor = "red",
+}: NavbarProps) => {
   const pathname = usePathname();
   const router = useRouter();
   const [mounted, setMounted] = React.useState(false);
   const [uid, setUid] = React.useState<string | null>(null);
-  const [notifications, setNotifications] = React.useState<UserNotification[]>([]);
+  const [notifications, setNotifications] = React.useState<UserNotification[]>(
+    [],
+  );
   const [isPanelOpen, setIsPanelOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
   const [activeSearchIndex, setActiveSearchIndex] = React.useState(0);
-  const [dataSearchResults, setDataSearchResults] = React.useState<SearchItem[]>([]);
+  const [dataSearchResults, setDataSearchResults] = React.useState<
+    SearchItem[]
+  >([]);
   const [isSearchingData, setIsSearchingData] = React.useState(false);
   const panelRef = React.useRef<HTMLDivElement | null>(null);
   const searchRef = React.useRef<HTMLDivElement | null>(null);
@@ -214,7 +274,9 @@ const Navbar = ({ isSidebarCollapsed, onToggleSidebar, bellColor = "red" }: Navb
     }
 
     return SEARCH_ITEMS.filter((item) => {
-      const haystack = [item.label, item.href, ...(item.keywords ?? [])].join(" ").toLowerCase();
+      const haystack = [item.label, item.href, ...(item.keywords ?? [])]
+        .join(" ")
+        .toLowerCase();
       return haystack.includes(query);
     }).slice(0, 8);
   }, [searchQuery]);
@@ -233,11 +295,14 @@ const Navbar = ({ isSidebarCollapsed, onToggleSidebar, bellColor = "red" }: Navb
       setIsSearchingData(true);
 
       try {
-        const [transactions, notifications, ...workspaceCollections] = await Promise.all([
-          getTransactionsByUid(uid),
-          getUserNotifications(uid),
-          ...DATA_COLLECTIONS.map((item) => getWorkspaceRecordsByUid(uid, item.collection)),
-        ]);
+        const [transactions, notifications, ...workspaceCollections] =
+          await Promise.all([
+            getTransactionsByUid(uid),
+            getUserNotifications(uid),
+            ...DATA_COLLECTIONS.map((item) =>
+              getWorkspaceRecordsByUid(uid, item.collection),
+            ),
+          ]);
 
         if (cancelled) {
           return;
@@ -245,7 +310,8 @@ const Navbar = ({ isSidebarCollapsed, onToggleSidebar, bellColor = "red" }: Navb
 
         const transactionResults: SearchItem[] = transactions
           .filter((item) => {
-            const haystack = `${item.merchant} ${item.category} ${item.account}`.toLowerCase();
+            const haystack =
+              `${item.merchant} ${item.category} ${item.account}`.toLowerCase();
             return haystack.includes(queryText);
           })
           .slice(0, 4)
@@ -259,7 +325,8 @@ const Navbar = ({ isSidebarCollapsed, onToggleSidebar, bellColor = "red" }: Navb
 
         const notificationResults: SearchItem[] = notifications
           .filter((item) => {
-            const haystack = `${item.title} ${item.message} ${item.taskType}`.toLowerCase();
+            const haystack =
+              `${item.title} ${item.message} ${item.taskType}`.toLowerCase();
             return haystack.includes(queryText);
           })
           .slice(0, 3)
@@ -271,25 +338,34 @@ const Navbar = ({ isSidebarCollapsed, onToggleSidebar, bellColor = "red" }: Navb
             preview: item.message,
           }));
 
-        const workspaceResults: SearchItem[] = workspaceCollections.flatMap((records, index) => {
-          const meta = DATA_COLLECTIONS[index];
+        const workspaceResults: SearchItem[] = workspaceCollections.flatMap(
+          (records, index) => {
+            const meta = DATA_COLLECTIONS[index];
 
-          return records
-            .filter((record) => {
-              const haystack = `${record.title} ${record.description} ${record.status}`.toLowerCase();
-              return haystack.includes(queryText);
-            })
-            .slice(0, 3)
-            .map((record) => ({
-              label: record.title,
-              href: meta.href,
-              type: "data",
-              source: meta.source,
-              preview: `${record.description || "-"} • ${formatMoney(record.amount)}`,
-            }));
-        });
+            return records
+              .filter((record) => {
+                const haystack =
+                  `${record.title} ${record.description} ${record.status}`.toLowerCase();
+                return haystack.includes(queryText);
+              })
+              .slice(0, 3)
+              .map((record) => ({
+                label: record.title,
+                href: meta.href,
+                type: "data",
+                source: meta.source,
+                preview: `${record.description || "-"} • ${formatMoney(record.amount)}`,
+              }));
+          },
+        );
 
-        setDataSearchResults([...transactionResults, ...workspaceResults, ...notificationResults].slice(0, 10));
+        setDataSearchResults(
+          [
+            ...transactionResults,
+            ...workspaceResults,
+            ...notificationResults,
+          ].slice(0, 10),
+        );
       } catch (error) {
         if (!cancelled) {
           console.error("Data search error:", error);
@@ -341,7 +417,9 @@ const Navbar = ({ isSidebarCollapsed, onToggleSidebar, bellColor = "red" }: Navb
     [router],
   );
 
-  const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleSearchKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
     if (!isSearchOpen && (event.key === "ArrowDown" || event.key === "Enter")) {
       setIsSearchOpen(true);
       return;
@@ -349,7 +427,9 @@ const Navbar = ({ isSidebarCollapsed, onToggleSidebar, bellColor = "red" }: Navb
 
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      setActiveSearchIndex((prev) => Math.min(prev + 1, mergedSearchItems.length - 1));
+      setActiveSearchIndex((prev) =>
+        Math.min(prev + 1, mergedSearchItems.length - 1),
+      );
       return;
     }
 
@@ -361,7 +441,8 @@ const Navbar = ({ isSidebarCollapsed, onToggleSidebar, bellColor = "red" }: Navb
 
     if (event.key === "Enter") {
       event.preventDefault();
-      const selected = mergedSearchItems[activeSearchIndex] ?? mergedSearchItems[0];
+      const selected =
+        mergedSearchItems[activeSearchIndex] ?? mergedSearchItems[0];
       if (selected) {
         navigateToSearchItem(selected);
       }
@@ -369,18 +450,23 @@ const Navbar = ({ isSidebarCollapsed, onToggleSidebar, bellColor = "red" }: Navb
   };
 
   const unreadNotifications = notifications.filter((item) => !item.isRead);
-  const hasHighPriority = unreadNotifications.some((item) => item.priority === "high");
-  const hasMediumPriority = unreadNotifications.some((item) => item.priority === "medium");
-  const hasLowPriority = unreadNotifications.some((item) => item.priority === "low");
+  const hasHighPriority = unreadNotifications.some(
+    (item) => item.priority === "high",
+  );
+  const hasMediumPriority = unreadNotifications.some(
+    (item) => item.priority === "medium",
+  );
+  const hasLowPriority = unreadNotifications.some(
+    (item) => item.priority === "low",
+  );
 
-  const resolvedBellColor =
-    hasHighPriority
-      ? "#ef4444"
-      : hasMediumPriority
-        ? "#f59e0b"
-        : hasLowPriority
-          ? "#22c55e"
-          : bellColor;
+  const resolvedBellColor = hasHighPriority
+    ? "#ef4444"
+    : hasMediumPriority
+      ? "#f59e0b"
+      : hasLowPriority
+        ? "#22c55e"
+        : bellColor;
 
   const priorityClassMap: Record<UserNotification["priority"], string> = {
     high: "bg-red-500",
@@ -397,7 +483,9 @@ const Navbar = ({ isSidebarCollapsed, onToggleSidebar, bellColor = "red" }: Navb
       await markNotificationAsRead(uid, notificationId);
       setNotifications((prev) =>
         prev.map((notification) =>
-          notification.id === notificationId ? { ...notification, isRead: true } : notification,
+          notification.id === notificationId
+            ? { ...notification, isRead: true }
+            : notification,
         ),
       );
     } catch (error) {
@@ -413,7 +501,9 @@ const Navbar = ({ isSidebarCollapsed, onToggleSidebar, bellColor = "red" }: Navb
 
     try {
       await markAllNotificationsAsRead(uid);
-      setNotifications((prev) => prev.map((notification) => ({ ...notification, isRead: true })));
+      setNotifications((prev) =>
+        prev.map((notification) => ({ ...notification, isRead: true })),
+      );
       toast.success("All notifications marked as read");
     } catch (error) {
       toast.error("Failed to mark all notifications");
@@ -433,7 +523,11 @@ const Navbar = ({ isSidebarCollapsed, onToggleSidebar, bellColor = "red" }: Navb
           onClick={onToggleSidebar}
           type="button"
         >
-          {isSidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          {isSidebarCollapsed ? (
+            <PanelLeftOpen size={18} />
+          ) : (
+            <PanelLeftClose size={18} />
+          )}
         </button>
 
         {segments.length > 0 ? (
@@ -476,7 +570,10 @@ const Navbar = ({ isSidebarCollapsed, onToggleSidebar, bellColor = "red" }: Navb
       </div>
 
       {/* Middle - Search Bar */}
-      <div className="hidden md:block mx-2 lg:mx-8 flex-1 max-w-md" ref={searchRef}>
+      <div
+        className="hidden md:block mx-2 lg:mx-8 flex-1 max-w-md"
+        ref={searchRef}
+      >
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -498,22 +595,30 @@ const Navbar = ({ isSidebarCollapsed, onToggleSidebar, bellColor = "red" }: Navb
               )}
 
               {mergedSearchItems.length === 0 ? (
-                <p className="px-3 py-3 text-sm text-text-secondary">No results found.</p>
+                <p className="px-3 py-3 text-sm text-text-secondary">
+                  No results found.
+                </p>
               ) : (
                 <div className="max-h-72 overflow-y-auto py-1">
                   {mergedSearchItems.map((item, index) => (
                     <button
                       className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm transition ${
-                        index === activeSearchIndex ? "bg-secondary text-text" : "text-text-secondary hover:bg-secondary"
+                        index === activeSearchIndex
+                          ? "bg-secondary text-text"
+                          : "text-text-secondary hover:bg-secondary"
                       }`}
                       key={`${item.type}-${item.href}-${item.label}`}
                       onClick={() => navigateToSearchItem(item)}
                       type="button"
                     >
                       <span className="min-w-0">
-                        <span className="block truncate font-medium">{item.label}</span>
+                        <span className="block truncate font-medium">
+                          {item.label}
+                        </span>
                         <span className="block truncate text-xs">
-                          {item.type === "data" ? `${item.source ?? "Data"} • ${item.preview ?? item.href}` : item.href}
+                          {item.type === "data"
+                            ? `${item.source ?? "Data"} • ${item.preview ?? item.href}`
+                            : item.href}
                         </span>
                       </span>
                       <span className="ml-2 shrink-0 rounded-md border border-outline px-1.5 py-0.5 text-[10px] uppercase">
@@ -560,7 +665,9 @@ const Navbar = ({ isSidebarCollapsed, onToggleSidebar, bellColor = "red" }: Navb
 
               <div className="max-h-80 overflow-y-auto">
                 {notifications.length === 0 && (
-                  <p className="px-3 py-4 text-sm text-text-secondary">No notifications yet.</p>
+                  <p className="px-3 py-4 text-sm text-text-secondary">
+                    No notifications yet.
+                  </p>
                 )}
 
                 {notifications.map((notification) => (
@@ -571,10 +678,16 @@ const Navbar = ({ isSidebarCollapsed, onToggleSidebar, bellColor = "red" }: Navb
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className={`h-2 w-2 rounded-full ${priorityClassMap[notification.priority]}`} />
-                          <p className="text-sm font-medium text-text">{notification.title}</p>
+                          <span
+                            className={`h-2 w-2 rounded-full ${priorityClassMap[notification.priority]}`}
+                          />
+                          <p className="text-sm font-medium text-text">
+                            {notification.title}
+                          </p>
                         </div>
-                        <p className="mt-1 text-xs text-text-secondary">{notification.message}</p>
+                        <p className="mt-1 text-xs text-text-secondary">
+                          {notification.message}
+                        </p>
                         <p className="mt-1 text-[11px] uppercase tracking-wide text-text-secondary">
                           {notification.taskType}
                         </p>
