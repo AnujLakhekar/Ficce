@@ -3,7 +3,12 @@
 import React from "react";
 import { Apple, ArrowRight, Check, Chrome, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
-import { _CreateUserWithEmailAndPassword, _SignInWithGoogle, auth } from "@/lib/firebase";
+import {
+  _CreateUserWithEmailAndPassword,
+  _SignInWithEmailAndPassword,
+  _SignInWithGoogle,
+  auth,
+} from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 
@@ -15,11 +20,11 @@ const heroSlides = [
 
 const Page = () => {
   const [mode, setMode] = React.useState<"register" | "login">("register");
-  const [firstName, setFirstName] = React.useState("Fletcher");
+  const [firstName, setFirstName] = React.useState("");
   const [lastName, setLastName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [acceptedTerms, setAcceptedTerms] = React.useState(true);
+  const [acceptedTerms, setAcceptedTerms] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
   const [activeSlide, setActiveSlide] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -71,7 +76,12 @@ const Page = () => {
       mode === "register" ? "Creating your account..." : "Logging you in...",
     );
     
-    _CreateUserWithEmailAndPassword(email, `${firstName} ${lastName}`, password)
+    const action =
+      mode === "register"
+        ? _CreateUserWithEmailAndPassword(email, `${firstName} ${lastName}`.trim(), password)
+        : _SignInWithEmailAndPassword(email, password);
+
+    action
       .then((user) => {
         toast.dismiss(loadingToast);
         toast.success(
@@ -79,8 +89,7 @@ const Page = () => {
             ? `Welcome, ${user.displayName || firstName}! Account created.`
             : "Logged in successfully!",
         );
-        console.log("User created:", user);
-        // TODO: Redirect to dashboard after successful auth
+        router.push("/dashboard");
       })
       .catch((error) => {
         toast.dismiss(loadingToast);
@@ -117,10 +126,15 @@ const Page = () => {
       toast.dismiss(loadingToast);
       toast.success("Signed in with Google successfully.");
       router.push("/dashboard");
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.dismiss(loadingToast);
 
-      if (error?.code === "auth/popup-closed-by-user") {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === "auth/popup-closed-by-user"
+      ) {
         toast.error("Google sign-in was cancelled.");
         return;
       }
@@ -219,7 +233,7 @@ const Page = () => {
                 />
                 <button
                   aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary transition hover:text-text"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary transition hover:text-text p-2"
                   onClick={() => setShowPassword((prev) => !prev)}
                   type="button"
                 >
@@ -228,10 +242,10 @@ const Page = () => {
               </div>
 
               {mode === "register" ? (
-                <label className="flex cursor-pointer items-center gap-3 text-sm text-text">
+                <label className="flex cursor-pointer items-center gap-3 text-sm text-text min-h-10 py-1">
                   <button
                     aria-label="Accept terms"
-                    className={`grid h-5 w-5 place-items-center rounded border ${
+                    className={`grid h-5 w-5 place-items-center rounded border flex-shrink-0 ${
                       acceptedTerms
                         ? "border-text bg-text text-forground"
                         : "border-outline bg-forground text-forground"

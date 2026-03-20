@@ -1,6 +1,11 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import React from "react";
 import { ArrowRight, Bot, ChartNoAxesCombined, ShieldCheck, Wallet } from "lucide-react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth, getTransactionsByUid, type Transaction } from "@/lib/firebase";
 
 const features = [
   {
@@ -30,6 +35,50 @@ const features = [
 ];
 
 export default function Page() {
+  const [userEmail, setUserEmail] = React.useState<string | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = React.useState(true);
+  const [transactions, setTransactions] = React.useState<Transaction[]>([]);
+
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setUserEmail(null);
+        setTransactions([]);
+        setIsLoadingStats(false);
+        return;
+      }
+
+      setUserEmail(user.email ?? null);
+
+      try {
+        const data = await getTransactionsByUid(user.uid);
+        setTransactions(data);
+      } catch (error) {
+        console.error("Failed to load landing stats:", error);
+        setTransactions([]);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const totalIncome = transactions
+    .filter((transaction) => transaction.type === "income")
+    .reduce((sum, transaction) => sum + transaction.amount, 0);
+
+  const totalExpense = transactions
+    .filter((transaction) => transaction.type === "expense")
+    .reduce((sum, transaction) => sum + transaction.amount, 0);
+
+  const formatMoney = (value: number) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+    }).format(value);
+
   return (
     <main className="min-h-screen bg-background text-text">
       <section className="mx-auto max-w-7xl px-6 py-10 md:px-10 md:py-14">
@@ -49,6 +98,16 @@ export default function Page() {
                 business health with a fast and focused workflow.
               </p>
 
+              {userEmail ? (
+                <div className="mt-4 rounded-xl border border-outline bg-secondary/50 px-4 py-3 text-sm text-text">
+                  Signed in as <span className="font-semibold">{userEmail}</span>
+                </div>
+              ) : (
+                <div className="mt-4 rounded-xl border border-outline bg-secondary/50 px-4 py-3 text-sm text-text-secondary">
+                  Sign in to see your real transaction stats on this page.
+                </div>
+              )}
+
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Link
                   className="inline-flex items-center gap-2 rounded-xl bg-text px-5 py-3 text-sm font-semibold text-forground transition hover:opacity-90"
@@ -64,12 +123,33 @@ export default function Page() {
                   Open Dashboard
                 </Link>
               </div>
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-xl border border-outline bg-secondary/60 px-4 py-3">
+                  <p className="text-xs text-text-secondary">Transactions</p>
+                  <p className="mt-1 text-xl font-semibold text-text">
+                    {isLoadingStats ? "..." : transactions.length}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-outline bg-secondary/60 px-4 py-3">
+                  <p className="text-xs text-text-secondary">Income</p>
+                  <p className="mt-1 text-xl font-semibold text-text">
+                    {isLoadingStats ? "..." : formatMoney(totalIncome)}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-outline bg-secondary/60 px-4 py-3">
+                  <p className="text-xs text-text-secondary">Expense</p>
+                  <p className="mt-1 text-xl font-semibold text-text">
+                    {isLoadingStats ? "..." : formatMoney(totalExpense)}
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="relative overflow-hidden rounded-2xl border border-outline">
               <Image
                 alt="Gradient finance preview"
-                className="h-[320px] w-full object-cover md:h-[420px]"
+                className="h-80 w-full object-cover md:h-105"
                 height={840}
                 priority
                 src="/sidebg.jpg"

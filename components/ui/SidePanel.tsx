@@ -15,6 +15,7 @@ import {
   CreditCard,
   HandCoins,
   House,
+  Ratio,
   ReceiptText,
   WalletCards,
 } from "lucide-react";
@@ -61,10 +62,10 @@ const NAV_GROUPS: NavGroup[] = [
         icon: CircleDollarSign,
         href: "/dashboard/transactions",
       },
-      { key: "payments", label: "Payments", icon: ReceiptText, children: [] },
+      { key: "payments", label: "Payments", icon: ReceiptText, href: "/dashboard/payments" },
       { key: "cards", label: "Cards", icon: CreditCard, href: "/dashboard/cards" },
       { key: "capital", label: "Capital", icon: WalletCards, href: "/dashboard/capital" },
-      { key: "accounts", label: "Accounts", icon: Building2, children: [] },
+      { key: "accounts", label: "Accounts", icon: Building2, href: "/dashboard/accounts" },
     ],
   },
   {
@@ -87,6 +88,19 @@ const NAV_GROUPS: NavGroup[] = [
         href: "/dashboard/reimbursements",
       },
       { key: "accounting", label: "Accounting", icon: BookOpen, href: "/dashboard/accounting" },
+    ],
+  },
+   {
+    title: "KIKO AI",
+    items: [
+      {
+        key: "KIKO",
+        label: "Agent Space",
+        icon: Ratio,
+        children: [
+          { label: "agent", href: "/dashboard/kiko/agent" },
+        ],
+      },
     ],
   },
 ];
@@ -137,7 +151,7 @@ const SidePanel = ({ isCollapsed }: SidePanelProps) => {
 
   return (
     <aside className="h-full bg-forground border-r border-outline px-3 py-3">
-      <div className="rounded-xl border border-outline bg-forground p-3">
+      {/* <div className="rounded-xl border border-outline bg-forground p-3">
         <div className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"}`}>
           <div className="grid h-6 w-6 place-items-center rounded-lg bg-[#0B4A4D] text-white">
             {AGENCY.Logo}
@@ -171,7 +185,7 @@ const SidePanel = ({ isCollapsed }: SidePanelProps) => {
             )}
           </AnimatePresence>
         </div>
-      </div>
+      </div> */}
 
       {NAV_GROUPS.map((group, groupIndex) => (
         <React.Fragment key={group.title ?? `group-${groupIndex}`}>

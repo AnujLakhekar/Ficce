@@ -63,7 +63,7 @@ const ProfileMenu = () => {
   }, []);
 
   if (loading) {
-    return <div className="h-9 w-9 rounded bg-gray-200 animate-pulse" />;
+    return <div className="h-9 w-9 rounded bg-gray-200 animate-pulse flex-shrink-0" />;
   }
 
   const displayName = user?.name || "Guest User";
