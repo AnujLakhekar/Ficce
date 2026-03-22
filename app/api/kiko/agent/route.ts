@@ -4,7 +4,11 @@ import { NextRequest } from "next/server"
 import fs from "node:fs/promises"
 import path from "node:path"
 import { getAuth } from "firebase-admin/auth"
-import { type DocumentData, type QueryDocumentSnapshot } from "firebase-admin/firestore"
+import {
+  type CollectionReference,
+  type DocumentData,
+  type QueryDocumentSnapshot,
+} from "firebase-admin/firestore"
 
 import { getFirebaseAdminApp, getFirebaseAdminDb } from "@/lib/firebase-admin"
 
@@ -551,7 +555,7 @@ async function firebaseListUserData(
     userDocPath: userDocRef.path,
     userDocExists: userDoc.exists,
     userDocData: userDoc.exists ? userDoc.data() : null,
-    collections: subcollections.map((collection) => collection.id),
+    collections: subcollections.map((collection: CollectionReference<DocumentData>) => collection.id),
   }
 }
 
