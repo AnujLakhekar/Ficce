@@ -1050,15 +1050,17 @@ async function firebaseExportUserCollection(
     .limit(limit)
     .get()
 
-  const docs = snapshots.docs.map((docSnap: QueryDocumentSnapshot<DocumentData>) => ({
+  const docs: Array<Record<string, unknown>> = snapshots.docs.map(
+    (docSnap: QueryDocumentSnapshot<DocumentData>) => ({
     id: docSnap.id,
     ...docSnap.data(),
-  }))
+    }),
+  )
 
   const fields =
     explicitFields.length > 0
       ? explicitFields
-      : Array.from(new Set(docs.flatMap((row) => Object.keys(row as Record<string, unknown>))))
+      : Array.from(new Set(docs.flatMap((row: Record<string, unknown>) => Object.keys(row))))
 
   const pickRow = (row: Record<string, unknown>) => {
     if (fields.length === 0) {
@@ -1072,7 +1074,7 @@ async function firebaseExportUserCollection(
     return next
   }
 
-  const normalizedRows = docs.map((row) => pickRow(row as Record<string, unknown>))
+  const normalizedRows = docs.map((row: Record<string, unknown>) => pickRow(row))
 
   const toCell = (value: unknown) => {
     if (value === null || value === undefined) {
@@ -1087,11 +1089,11 @@ async function firebaseExportUserCollection(
   if (format === "json") {
     content = JSON.stringify(normalizedRows, null, 2)
   } else if (format === "jsonl") {
-    content = normalizedRows.map((row) => JSON.stringify(row)).join("\n")
+    content = normalizedRows.map((row: Record<string, unknown>) => JSON.stringify(row)).join("\n")
   } else if (format === "csv") {
     const headers = fields.length > 0 ? fields : ["id"]
     const headerLine = headers.map((header) => `"${toCell(header)}"`).join(",")
-    const lines = normalizedRows.map((row) =>
+    const lines = normalizedRows.map((row: Record<string, unknown>) =>
       headers
         .map((header) => `"${toCell((row as Record<string, unknown>)[header])}"`)
         .join(","),
@@ -1101,7 +1103,7 @@ async function firebaseExportUserCollection(
     const headers = fields.length > 0 ? fields : ["id"]
     const header = `| ${headers.join(" | ")} |`
     const divider = `| ${headers.map(() => "---").join(" | ")} |`
-    const rows = normalizedRows.map((row) => {
+    const rows = normalizedRows.map((row: Record<string, unknown>) => {
       const cells = headers.map((headerKey) => {
         const raw = (row as Record<string, unknown>)[headerKey]
         const rendered = typeof raw === "object" ? JSON.stringify(raw) : String(raw ?? "")
@@ -1581,7 +1583,7 @@ function toMarkdownTable(value: unknown): string | null {
   }
 
   const columns = Array.from(
-    new Set(docs.flatMap((row) => Object.keys(row || {}))),
+    new Set(docs.flatMap((row: Record<string, unknown>) => Object.keys(row || {}))),
   ).slice(0, 8)
 
   if (columns.length === 0) {
@@ -1590,7 +1592,7 @@ function toMarkdownTable(value: unknown): string | null {
 
   const header = `| ${columns.join(" | ")} |`
   const divider = `| ${columns.map(() => "---").join(" | ")} |`
-  const rows = docs.slice(0, 20).map((row) => {
+  const rows = docs.slice(0, 20).map((row: Record<string, unknown>) => {
     const cells = columns.map((column) => {
       const raw = (row as Record<string, unknown>)[column]
       const rendered = typeof raw === "object" ? JSON.stringify(raw) : String(raw ?? "")
