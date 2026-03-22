@@ -4,6 +4,7 @@ import { NextRequest } from "next/server"
 import fs from "node:fs/promises"
 import path from "node:path"
 import { getAuth } from "firebase-admin/auth"
+import { type DocumentData, type QueryDocumentSnapshot } from "firebase-admin/firestore"
 
 import { getFirebaseAdminApp, getFirebaseAdminDb } from "@/lib/firebase-admin"
 
@@ -455,7 +456,10 @@ async function firebaseRead(input: Record<string, unknown> = {}) {
     type: "collection",
     path: firestorePath,
     count: snapshots.size,
-    docs: snapshots.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() })),
+    docs: snapshots.docs.map((docSnap: QueryDocumentSnapshot<DocumentData>) => ({
+      id: docSnap.id,
+      ...docSnap.data(),
+    })),
   }
 }
 
@@ -801,7 +805,10 @@ async function firebaseQueryUserCollection(
     uid: context.uid,
     path: scopedPath,
     count: snapshots.size,
-    docs: snapshots.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() })),
+    docs: snapshots.docs.map((docSnap: QueryDocumentSnapshot<DocumentData>) => ({
+      id: docSnap.id,
+      ...docSnap.data(),
+    })),
   }
 }
 
@@ -1037,7 +1044,10 @@ async function firebaseExportUserCollection(
     .limit(limit)
     .get()
 
-  const docs = snapshots.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
+  const docs = snapshots.docs.map((docSnap: QueryDocumentSnapshot<DocumentData>) => ({
+    id: docSnap.id,
+    ...docSnap.data(),
+  }))
 
   const fields =
     explicitFields.length > 0
