@@ -7,7 +7,9 @@ import { getAuth } from "firebase-admin/auth"
 import {
   type CollectionReference,
   type DocumentData,
+  type Query,
   type QueryDocumentSnapshot,
+  type WhereFilterOp,
 } from "firebase-admin/firestore"
 
 import { getFirebaseAdminApp, getFirebaseAdminDb } from "@/lib/firebase-admin"
@@ -789,7 +791,7 @@ async function firebaseQueryUserCollection(
   ])
 
   const db = getFirebaseAdminDb()
-  let queryRef: FirebaseFirestore.Query = db.collection(scopedPath)
+  let queryRef: Query<DocumentData> = db.collection(scopedPath)
 
   if (whereField && whereOpRaw && whereValue !== undefined) {
     if (!allowedWhereOps.has(whereOpRaw)) {
@@ -797,8 +799,8 @@ async function firebaseQueryUserCollection(
     }
     queryRef = queryRef.where(
       whereField,
-      whereOpRaw as FirebaseFirestore.WhereFilterOp,
-      whereValue as FirebaseFirestore.WhereFilterOp extends never ? never : unknown,
+      whereOpRaw as WhereFilterOp,
+      whereValue,
     )
   }
 
