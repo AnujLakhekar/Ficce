@@ -11,6 +11,7 @@ import {
   getWorkspaceRecordsByUid,
   type WorkspaceRecord,
 } from "@/lib/firebase";
+import { PageAgentButton } from "@/components/ai/PageAgentButton";
 
 type CollectionManagerProps = {
   title: string;
@@ -27,7 +28,30 @@ const formatDate = (value: WorkspaceRecord["createdAt"]) => {
     return "-";
   }
 
-  return value.toDate().toLocaleDateString("en-US", {
+  const maybeTimestamp = value as unknown as { toDate?: () => Date; seconds?: number };
+
+  let date: Date | null = null;
+  if (typeof maybeTimestamp?.toDate === "function") {
+    date = maybeTimestamp.toDate();
+  } else if (value instanceof Date) {
+    date = value;
+  } else if (
+    typeof maybeTimestamp?.seconds === "number" &&
+    Number.isFinite(maybeTimestamp.seconds)
+  ) {
+    date = new Date(maybeTimestamp.seconds * 1000);
+  } else if (typeof value === "string" || typeof value === "number") {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      date = parsed;
+    }
+  }
+
+  if (!date) {
+    return "-";
+  }
+
+  return date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "2-digit",
@@ -242,14 +266,17 @@ export default function CollectionManager({
             <p className="mt-1 text-xs sm:text-sm text-text-secondary">{subtitle}</p>
           </div>
 
-          <button
-            className="h-11 sm:h-10 rounded-xl bg-text px-3 sm:px-4 text-xs sm:text-sm font-medium text-forground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={isSaving || isLoading || !uid}
-            onClick={() => void handleCreate()}
-            type="button"
-          >
-            {isSaving ? "Saving..." : addButtonLabel}
-          </button>
+          <div className="flex items-center gap-2">
+            <PageAgentButton />
+            <button
+              className="h-11 sm:h-10 rounded-xl bg-text px-3 sm:px-4 text-xs sm:text-sm font-medium text-forground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={isSaving || isLoading || !uid}
+              onClick={() => void handleCreate()}
+              type="button"
+            >
+              {isSaving ? "Saving..." : addButtonLabel}
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-2 sm:gap-3 border-b border-outline px-3 sm:px-4 py-3 sm:py-4 sm:grid-cols-2 md:grid-cols-5">

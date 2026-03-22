@@ -28,6 +28,7 @@ import {
 } from "lucide-react"
 import React from "react"
 import { onAuthStateChanged } from "firebase/auth"
+import { PageAgentButton } from "@/components/ai/PageAgentButton"
 import {
   auth,
   createUserNotification,
@@ -60,11 +61,43 @@ const formatCurrency = (amount: number) => {
 }
 
 const formatDate = (transaction: Transaction) => {
-  if (!transaction.createdAt) {
+  const value = transaction.createdAt as
+    | Transaction["createdAt"]
+    | Date
+    | string
+    | number
+    | { toDate?: () => Date; seconds?: number }
+    | null
+    | undefined
+
+  if (!value) {
     return "-"
   }
 
-  return transaction.createdAt.toDate().toLocaleDateString("en-US", {
+  const maybeTimestamp = value as { toDate?: () => Date; seconds?: number }
+
+  let date: Date | null = null
+  if (typeof maybeTimestamp?.toDate === "function") {
+    date = maybeTimestamp.toDate()
+  } else if (value instanceof Date) {
+    date = value
+  } else if (
+    typeof maybeTimestamp?.seconds === "number" &&
+    Number.isFinite(maybeTimestamp.seconds)
+  ) {
+    date = new Date(maybeTimestamp.seconds * 1000)
+  } else if (typeof value === "string" || typeof value === "number") {
+    const parsed = new Date(value)
+    if (!Number.isNaN(parsed.getTime())) {
+      date = parsed
+    }
+  }
+
+  if (!date) {
+    return "-"
+  }
+
+  return date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "2-digit",
@@ -341,8 +374,9 @@ export default function Page() {
       </section>
 
       <section className="rounded-2xl border border-outline bg-forground">
-        <div className="border-b border-outline px-3 sm:px-5 py-3 sm:py-4">
+        <div className="border-b border-outline px-3 sm:px-5 py-3 sm:py-4 flex items-center justify-between">
           <h2 className="text-lg sm:text-2xl font-semibold text-text">All Transactions</h2>
+          <PageAgentButton />
         </div>
 
         <div className="grid grid-cols-1 gap-2 sm:gap-3 border-b border-outline px-3 sm:px-4 py-3 sm:py-4 sm:grid-cols-2 md:grid-cols-6">

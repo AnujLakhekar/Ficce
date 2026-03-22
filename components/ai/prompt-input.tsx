@@ -374,12 +374,20 @@ export const PromptInputActionAddAttachments = ({
 }: PromptInputActionAddAttachmentsProps) => {
   const attachments = usePromptInputAttachments()
 
+  const triggerFileDialog = () => {
+    attachments.openFileDialog()
+  }
+
   return (
     <DropdownMenuItem
       {...props}
+      onClick={e => {
+        props.onClick?.(e)
+        triggerFileDialog()
+      }}
       onSelect={e => {
-        e.preventDefault()
-        attachments.openFileDialog()
+        props.onSelect?.(e)
+        triggerFileDialog()
       }}
     >
       <ImageIcon className="mr-2 size-4" /> {label}
@@ -436,7 +444,21 @@ export const PromptInput = ({
   filesRef.current = files
 
   const openFileDialogLocal = useCallback(() => {
-    inputRef.current?.click()
+    const input = inputRef.current
+    if (!input) {
+      return
+    }
+
+    if (typeof input.showPicker === "function") {
+      try {
+        input.showPicker()
+        return
+      } catch {
+        // Fall through to click() for browsers/contexts where showPicker is blocked.
+      }
+    }
+
+    input.click()
   }, [])
 
   const matchesAccept = useCallback(
@@ -451,6 +473,11 @@ export const PromptInput = ({
         .filter(Boolean)
 
       return patterns.some(pattern => {
+        if (pattern.startsWith(".")) {
+          const fileName = f.name.toLowerCase()
+          return fileName.endsWith(pattern.toLowerCase())
+        }
+
         if (pattern.endsWith("/*")) {
           const prefix = pattern.slice(0, -1) // e.g: image/* -> image/
           return f.type.startsWith(prefix)
@@ -543,7 +570,24 @@ export const PromptInput = ({
     if (!usingProvider) {
       return
     }
-    controller.__registerFileInput(inputRef, () => inputRef.current?.click())
+
+    controller.__registerFileInput(inputRef, () => {
+      const input = inputRef.current
+      if (!input) {
+        return
+      }
+
+      if (typeof input.showPicker === "function") {
+        try {
+          input.showPicker()
+          return
+        } catch {
+          // Fall through to click() for browsers/contexts where showPicker is blocked.
+        }
+      }
+
+      input.click()
+    })
   }, [usingProvider, controller])
 
   // Note: File input cannot be programmatically set for security reasons
