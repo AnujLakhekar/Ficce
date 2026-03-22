@@ -975,7 +975,7 @@ async function firebaseDeleteUserRecordsByMatch(
   const snapshots = await db.collection(scopedPath).limit(200).get()
   const expected = caseInsensitive ? value.toLowerCase() : value
 
-  const matched = snapshots.docs.filter((docSnap) => {
+  const matched = snapshots.docs.filter((docSnap: QueryDocumentSnapshot<DocumentData>) => {
     const data = docSnap.data() as Record<string, unknown>
     const current = String(data[field] ?? "").trim()
     if (!current) {
@@ -1009,7 +1009,7 @@ async function firebaseDeleteUserRecordsByMatch(
     field,
     value,
     deletedCount: toDelete.length,
-    docIds: toDelete.map((docSnap) => docSnap.id),
+    docIds: toDelete.map((docSnap: QueryDocumentSnapshot<DocumentData>) => docSnap.id),
     truncated: matched.length > toDelete.length,
   }
 }
@@ -1144,7 +1144,7 @@ async function firebaseUserTransactionsStats(
   let totalExpense = 0
   const byCategory: Record<string, number> = {}
 
-  const items = snap.docs.map((docSnap) => {
+  const items = snap.docs.map((docSnap: QueryDocumentSnapshot<DocumentData>) => {
     const data = docSnap.data() as Record<string, unknown>
     const amount = Number(data.amount ?? 0)
     const type = String(data.type ?? "")
